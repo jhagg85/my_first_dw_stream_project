@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: streaming_source
+    catalog: workspace
+    schema: dev_analytics
+    tables:
+      - name: bronze_transactions
+        description: "Real-time raw transaction events ingested continuously via Databricks Auto Loader."
