@@ -1,0 +1,15 @@
+# Local virtual environment isolation layers
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local dbt logs and compiled target artifacts
+target/
+logs/
+dbt_modules/
+dbt_packages/
+
+# Block accidental credential file hunting
+.env
+*.token

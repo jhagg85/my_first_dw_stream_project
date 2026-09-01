@@ -1,0 +1,13 @@
+name: 'my_first_dw_stream_project'
+version: '1.0.0'
+config-version: 2
+profile: 'my_first_dw_stream_project'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+
+clean-targets:
+  - "target"
+
+models:
+  materialized: table

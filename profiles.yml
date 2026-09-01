@@ -1,0 +1,19 @@
+my_first_dw_stream_project:
+  outputs:
+    prod:
+      type: databricks
+      catalog: workspace
+      schema: dev_analytics
+      host: databricks.com
+      # This routes queries smoothly past sign-up loops directly into your isolated protocol endpoint
+      http_path: /sql/protocolv1/o/f7a07339
+      token: "{{ env_var('DBT_DATABRICKS_TOKEN') }}"
+
+      # 🚨 Memory Guard Protection: Limit to 1 thread to respect your M1 8GB RAM footprint
+      threads: 1
+
+      # Map your Databricks Workspace to your secure Azure Cloud Data Lake Gen2 storage location
+      client_id: "{{ env_var('AZURE_CLIENT_ID') }}"
+      client_secret: "{{ env_var('AZURE_CLIENT_SECRET') }}"
+      tenant_id: "{{ env_var('AZURE_TENANT_ID') }}"
+  target: prod
