@@ -1,0 +1,54 @@
+name: Enterprise Cloud Data Pipeline Execution
+
+on:
+  push:
+    branches:
+      - main  # Triggers automatically when code is pushed to production
+
+jobs:
+  deploy_and_transform:
+    runs-on: ubuntu-24.04  # Headless automated runner in the cloud
+    
+    env:
+      DBT_DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_PROD_SECRET_TOKEN }}
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: Setup Optimized Python 3.12 Engine
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Rust-Backed uv Package Manager
+        run: curl -LsSf https://astral.sh | sh
+
+      - name: Install Production Project Dependencies
+        run: |
+          uv venv
+          . .venv/bin/activate
+          uv pip install dbt-core==1.5.12 dbt-databricks==1.5.0 databricks-sdk==0.28.0
+
+      - name: Emulate Missing distutils Core Package Modules
+        run: |
+          mkdir -p .venv/lib/python3.12/site-packages/distutils
+          touch .venv/lib/python3.12/site-packages/distutils/__init__.py
+          echo "def strtobool(val):" > .venv/lib/python3.12/site-packages/distutils/util.py
+          echo "    val = val.lower()" >> .venv/lib/python3.12/site-packages/distutils/util.py
+          echo "    if val in ('y', 'yes', 't', 'true', 'on', '1'): return 1" >> .venv/lib/python3.12/site-packages/distutils/util.py
+          echo "    return 0" >> .venv/lib/python3.12/site-packages/distutils/util.py
+
+      - name: Apply RefreshableCredentials SDK Fallback Patch
+        run: |
+          echo -e "\ntry:\n    from databricks.sdk.credentials_provider import RefreshableCredentials\nexcept ImportError:\n    class RefreshableCredentials:\n        def __init__(self, *args, **kwargs): pass" >> .venv/lib/python3.12/site-packages/databricks/sdk/oauth.py
+
+      - name: Run Incremental Cloud Medallion Pipeline
+        run: |
+          . .venv/bin/activate
+          dbt run --profiles-dir .
+
+      - name: Execute Automated Data Quality YAML Tests
+        run: |
+          . .venv/bin/activate
+          dbt test --profiles-dir .
